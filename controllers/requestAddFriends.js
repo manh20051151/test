@@ -164,10 +164,11 @@ const updateListFriend = async (req, res) => {
   
       // Lưu thay đổi vào database
       const receiverSocketId = getReceiverSocketId(reciverId.toString());
+
+      await friend.save();
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("SocketdeleteFriend");
       }
-      await friend.save();
   
       return res.status(200).json({ success: true, message: 'Friend removed successfully' });
     } catch (error) {
@@ -193,10 +194,16 @@ const updateListFriend = async (req, res) => {
       if (index !== -1) {
         friend.friendList.splice(index, 1);
       }
+      const receiverSocketId = getReceiverSocketId(reciverId.toString());
   
       // Lưu thay đổi vào database
       await friend.save();
   
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("SocketdeleteFriendFr");
+      }
+
       return res.status(200).json({ success: true, message: 'Friend removed successfully' });
     } catch (error) {
       console.error('Error updating user:', error);
@@ -209,10 +216,7 @@ const updateListFriend = async (req, res) => {
     const { _id } = req.user;
     const { id: reciverId } = req.params;
     
-    const receiverSocketId = getReceiverSocketId(reciverId.toString());
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("SocketupdateListFriendNew");
-    }
+
     try {
       // Tìm user theo _id
       //const user = await ListFriend.findById(_id);
@@ -232,6 +236,14 @@ const updateListFriend = async (req, res) => {
       // Lưu thay đổi vào database
       await friend.save();
   
+      const receiverSocketId = getReceiverSocketId(reciverId.toString());
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("SocketupdateListFriendNew");
+      }
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("SocketupdateListFriendNew");
+      }
+
       return res.status(200).json({ success: true, message: 'Friend added successfully' });
     } catch (error) {
       console.error('Error updating user:', error);

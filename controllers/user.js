@@ -325,13 +325,27 @@ const deleteUser = asyncHandler(async (req, res)=>{
     // if(!_id){
     //     throw new Error('missing inputs')
     // }
-
+    const friend = await ListFriend.findOne({ userId: uid });
 
     const receiverSocketId = getReceiverSocketId(uid.toString());
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("SocketdeleteUser");
     }
+
+        // Tìm và xóa uid trong tất cả các friendList
+        await ListFriend.updateMany(
+            { friendList: uid },
+            { $pull: { friendList: uid } }
+          );
+
     const response = await User.findByIdAndDelete(uid)
+
+    friend.friendList.forEach(async (participantId) => {
+        const receiverSocketIdd = getReceiverSocketId(participantId.toString());
+        if (receiverSocketIdd) {
+          io.to(receiverSocketIdd).emit("SocketdeleteUserByAdminFR");
+        }
+      });
     return res.status(200).json({
         success: response ? true : false,
         mes: response ? `User with email ${response.username} deleted` : 'no user delete'
@@ -405,25 +419,22 @@ const updateUser = asyncHandler(async (req, res) => {
 const updateUserByAdmin = asyncHandler(async (req, res)=>{
     const { uid} = req.params
 
-    const receiverSocketId = getReceiverSocketId(uid.toString());
-
-
-    const friend = await ListFriend.findOne({ userId: uid });
-
 
     if(Object.keys(req.body).length === 0){
         throw new Error('missing inputs')
     }
     const response = await User.findByIdAndUpdate(uid, req.body, {new: true}).select('-password')
 
+    const friend = await ListFriend.findOne({ userId: uid });
 
-        friend.friendList.forEach(async (participantId) => {
+    friend.friendList.forEach(async (participantId) => {
         const receiverSocketIdd = getReceiverSocketId(participantId.toString());
         if (receiverSocketIdd) {
           io.to(receiverSocketIdd).emit("SocketupdateUserByAdminFR");
         }
       });
 
+    const receiverSocketId = getReceiverSocketId(uid.toString());
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("SocketupdateUserByAdmin");
     }
@@ -432,7 +443,6 @@ const updateUserByAdmin = asyncHandler(async (req, res)=>{
         mes: response ? 'Updated' : 'some thing went wrong'
     })
 })
-
 module.exports = {
     register, 
     login, 
