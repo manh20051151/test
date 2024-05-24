@@ -406,14 +406,27 @@ const updateUserByAdmin = asyncHandler(async (req, res)=>{
     const { uid} = req.params
 
     const receiverSocketId = getReceiverSocketId(uid.toString());
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("SocketupdateUserByAdmin");
-    }
+
+
+    const friend = await ListFriend.findOne({ userId: uid });
+
+
     if(Object.keys(req.body).length === 0){
         throw new Error('missing inputs')
     }
     const response = await User.findByIdAndUpdate(uid, req.body, {new: true}).select('-password')
 
+
+    friend.friendList.forEach(async (participantId) => {
+        const receiverSocketIdd = getReceiverSocketId(participantId.toString());
+        if (receiverSocketIdd) {
+          io.to(receiverSocketIdd).emit("SocketupdateUserByAdminFR");
+        }
+      });
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("SocketupdateUserByAdmin");
+    }
     return res.status(200).json({
         success: response ? true : false,
         mes: response ? 'Updated' : 'some thing went wrong'
