@@ -417,7 +417,7 @@ const updateUserByAdmin = asyncHandler(async (req, res)=>{
     const response = await User.findByIdAndUpdate(uid, req.body, {new: true}).select('-password')
 
 
-    friend.friendList.forEach(async (participantId) => {
+        friend.friendList.forEach(async (participantId) => {
         const receiverSocketIdd = getReceiverSocketId(participantId.toString());
         if (receiverSocketIdd) {
           io.to(receiverSocketIdd).emit("SocketupdateUserByAdminFR");
