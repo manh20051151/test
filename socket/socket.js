@@ -11,7 +11,7 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
     cors:{
-        origin: ['https://manh20051151.github.io/client_deploy'],
+        origin: ['http://ec2-13-215-193-21.ap-southeast-1.compute.amazonaws.com:3000'],
         methods: ['GET', 'POST'],
     }
 })
